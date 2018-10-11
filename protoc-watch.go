@@ -109,6 +109,7 @@ func handle(event fsnotify.Event) {
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not read path: %s\n", err)
+		return
 	}
 
 	if descriptor.IsDir() {
