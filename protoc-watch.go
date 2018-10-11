@@ -20,7 +20,7 @@ func init() {
 	w, err := fsnotify.NewWatcher()
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not create the watcher: %s", err)
+		fmt.Fprintf(os.Stderr, "could not create the watcher: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -32,14 +32,14 @@ func init() {
 	}
 
 	if len(os.Args) < 2 {
-		fmt.Fprint(os.Stderr, "missing path as argument")
+		fmt.Fprint(os.Stderr, "missing path as argument\n")
 		os.Exit(1)
 	}
 
 	basePath = filepath.Join(filepath.Dir(os.Args[0]), os.Args[len(os.Args)-1])
 
 	if err := lookForProtoc(); err != nil {
-		fmt.Fprint(os.Stderr, "could not find the protoc library, please ensure you have it installed")
+		fmt.Fprintf(os.Stderr, "could not find the protoc library, please ensure you have it installed: %s\n", err)
 		os.Exit(1)
 	}
 }
@@ -57,7 +57,7 @@ func lookForProtoc() error {
 func usage() {
 	out, err := exec.Command("protoc", "--help").Output()
 	if err != nil {
-		fmt.Fprint(os.Stderr, "could not read: protoc --help")
+		fmt.Fprint(os.Stderr, "could not read: protoc --help\n")
 		os.Exit(1)
 	}
 	fmt.Print(strings.Replace(string(out), "protoc ", "protoc-watch ", 1))
@@ -68,7 +68,7 @@ func registerListeners(path string) {
 	descriptors, err := ioutil.ReadDir(path)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not read path: %s", err)
+		fmt.Fprintf(os.Stderr, "could not read path: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -102,12 +102,13 @@ func handle(event fsnotify.Event) {
 
 	if event.Op&fsnotify.Remove == fsnotify.Remove {
 		watcher.Remove(event.Name)
+		return
 	}
 
 	descriptor, err := os.Stat(event.Name)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not read path: %s", err)
+		fmt.Fprintf(os.Stderr, "could not read path: %s\n", err)
 	}
 
 	if descriptor.IsDir() {
@@ -123,7 +124,8 @@ func handle(event fsnotify.Event) {
 }
 
 func compile(path string) {
-	args := strings.Replace(strings.Join(os.Args[1:], " "), basePath, path, 1)
+	args := strings.Replace(strings.Join(os.Args[1:], " "), basePath, path, 2)
+	args = strings.Replace(args, ".proto/", ".proto", 1)
 	out, _ := exec.Command("protoc", strings.Split(args, " ")...).Output()
 	fmt.Println(path, string(out))
 }
