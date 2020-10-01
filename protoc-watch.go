@@ -80,6 +80,7 @@ func registerListeners(path string) {
 			continue
 		}
 
+		compile(next)
 		watcher.Add(next)
 	}
 }
